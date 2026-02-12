@@ -167,11 +167,17 @@ class CBSETutor:
                 # Show thinking indicator
                 self.interface.display_thinking()
                 
-                # Get response
+                # Get response (sources are now dicts)
                 response, sources = self.process_query(user_input)
                 
+                # Format sources for display (convert dicts to strings)
+                formatted_sources = [
+                    f"{s.get('subject', 'Unknown')} - {s.get('source', 'Unknown')} (Page {s.get('page', '?')})"
+                    for s in sources
+                ]
+                
                 # Display response
-                self.interface.display_response(response, sources)
+                self.interface.display_response(response, formatted_sources)
                 
                 # Add to memory
                 self.memory.add_exchange(user_input, response)

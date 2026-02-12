@@ -82,6 +82,19 @@ class OllamaClient:
             return "⚠️ Request timed out. The model might be too slow."
         except Exception as e:
             return f"❌ Error generating response: {str(e)}"
+    
+    def test_connection(self) -> bool:
+        """
+        Test if Ollama server is running and responding.
+        
+        Returns:
+            True if connected, False otherwise
+        """
+        try:
+            response = requests.get(f"{self.base_url}/api/tags", timeout=2)
+            return response.status_code == 200
+        except:
+            return False
 
 
 if __name__ == "__main__":

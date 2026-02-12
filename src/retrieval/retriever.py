@@ -241,7 +241,7 @@ class Retriever:
             source_info = f"{metadata.get('subject', 'Unknown')} - {metadata.get('source', 'Unknown')} (Page {metadata.get('page', '?')})"
             
             context_parts.append(f"[Source {i + 1}: {source_info}]\\n{text}\\n")
-            sources.append(source_info)
+            sources.append(metadata)  # Return dict for API
         
         context_string = "\\n".join(context_parts)
         

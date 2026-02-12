@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBSE Class 10 AI Tutor</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎓 CBSE Class 10 AI Tutor</h1>
+                <p class="subtitle">Social Science • Ask me anything from your textbook</p>
+            </div>
+            <button class="clear-btn" onclick="clearChat()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                Clear
+            </button>
+        </header>
+
+        <!-- Chat Messages -->
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message">
+                <h2>Welcome! 👋</h2>
+                <p>I'm your AI tutor for CBSE Class 10 Social Science.</p>
+                <div class="suggestions">
+                    <p class="suggestions-title">Try asking:</p>
+                    <button class="suggestion-chip" onclick="askQuestion('What is democracy?')">
+                        What is democracy?
+                    </button>
+                    <button class="suggestion-chip" onclick="askQuestion('Explain nationalism in brief')">
+                        Explain nationalism in brief
+                    </button>
+                    <button class="suggestion-chip" onclick="askQuestion('What are the features of federalism?')">
+                        What are the features of federalism?
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <form class="input-form" onsubmit="sendMessage(event)">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Ask a question about Social Science..."
+                    rows="1"
+                    required
+                ></textarea>
+                <button type="submit" id="sendBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </form>
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

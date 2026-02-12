@@ -19,3 +19,6 @@ pymupdf>=1.23.0
 python-dotenv>=1.0.0
 pyyaml>=6.0.1
 colorama>=0.4.6
+fastapi
+uvicorn[standard]
+python-multipart

@@ -7,8 +7,8 @@ embedding:
 
 # Text Chunking
 chunking:
-  chunk_size: 800
-  chunk_overlap: 200
+  chunk_size: 1200  # Larger chunks for richer context
+  chunk_overlap: 350  # More overlap to preserve connections
   separator: "\n\n"
 
 # ChromaDB Configuration
@@ -18,15 +18,15 @@ vectorstore:
 
 # Retrieval Configuration
 retrieval:
-  top_k: 10  # More chunks for better coverage (especially for broad questions)
+  top_k: 7  # Balanced: enough coverage, not too much noise/mixing
   score_threshold: 0.5  # Minimum similarity score
 
 # LLM Configuration
 llm:
   provider: "ollama"  # Using Ollama (local, free)
-  model: "llama3.2"  # Ollama model (fast and good quality)
-  temperature: 0.3  # Lower = more focused, less creative
-  max_tokens: 300  # Shorter responses
+  model: "llama3.2"  # Ollama model
+  temperature: 0.7  # Lower = more focused, less mixing
+  max_tokens: 500  # Allow detailed answers
 
 # Chat Configuration
 chat:
@@ -35,5 +35,5 @@ chat:
 
 # Subjects
 subjects:
-  - english
+  # - english
   - social_science

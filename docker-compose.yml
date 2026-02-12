@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  tutor-api:
+    build: .
+    container_name: cbse-tutor-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./vectorstore:/app/vectorstore
+      - ./data:/app/data
+    environment:
+      - OLLAMA_HOST=http://localhost:11434
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  vectorstore_data:
