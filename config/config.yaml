@@ -1,0 +1,39 @@
+# CBSE Class 10 AI Tutor Configuration
+
+# Embedding Configuration
+embedding:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "cpu"  # Use "cuda" if GPU available
+
+# Text Chunking
+chunking:
+  chunk_size: 800
+  chunk_overlap: 200
+  separator: "\n\n"
+
+# ChromaDB Configuration
+vectorstore:
+  persist_directory: "./vectorstore"
+  collection_name: "cbse_class10_textbooks"
+
+# Retrieval Configuration
+retrieval:
+  top_k: 5  # Get more context for better answers
+  score_threshold: 0.5  # Minimum similarity score
+
+# LLM Configuration
+llm:
+  provider: "ollama"  # Using Ollama (local, free)
+  model: "llama3.2"  # Ollama model (fast and good quality)
+  temperature: 0.3  # Lower = more focused, less creative
+  max_tokens: 300  # Shorter responses
+
+# Chat Configuration
+chat:
+  memory_size: 10  # Number of messages to keep in history
+  show_sources: true  # Display source chapters/pages
+
+# Subjects
+subjects:
+  - english
+  - social_science
