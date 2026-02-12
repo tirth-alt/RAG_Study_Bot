@@ -114,8 +114,14 @@ class CBSETutor:
         Returns:
             Tuple of (response, sources)
         """
-        # Get relevant context
-        context, sources = self.retriever.get_context_string(question)
+        # Get chat history for query reformulation
+        history_exchanges = self.memory.get_history()
+        
+        # Get relevant context with reformulation
+        context, sources = self.retriever.get_context_string(
+            question,
+            chat_history=history_exchanges
+        )
         
         # Get conversation history
         history = self.memory.get_history_string(num_exchanges=2)

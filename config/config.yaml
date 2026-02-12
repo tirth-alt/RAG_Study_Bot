@@ -18,7 +18,7 @@ vectorstore:
 
 # Retrieval Configuration
 retrieval:
-  top_k: 5  # Get more context for better answers
+  top_k: 10  # More chunks for better coverage (especially for broad questions)
   score_threshold: 0.5  # Minimum similarity score
 
 # LLM Configuration

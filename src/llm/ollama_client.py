@@ -11,7 +11,7 @@ class OllamaClient:
     """Client for Ollama local LLM."""
     
     def __init__(self, model_name: str = "llama3.2", 
-                 temperature: float = 0.7, max_tokens: int = 500,
+                 temperature: float = 0.8, max_tokens: int = 500,
                  base_url: str = "http://localhost:11434"):
         """
         Initialize Ollama client.
