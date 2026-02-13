@@ -1,176 +1,305 @@
-# CBSE Class 10 AI Tutor
+# 🤖 AI-Powered RAG Tutor
 
-A RAG-based (Retrieval-Augmented Generation) AI tutor for CBSE Class 10 students studying English and Social Science. The tutor provides answers based on CBSE textbooks and maintains conversation context.
+An intelligent tutoring system for CBSE Class 10 Social Science using Retrieval-Augmented Generation (RAG). Ask questions and get accurate answers with source citations from the official NCERT textbooks.
 
-## 🎯 Features
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-- **Textbook-based answers**: All responses are grounded in CBSE Class 10 textbooks
-- **Conversational memory**: Maintains context across multiple questions
-- **Source citations**: Shows which textbook pages answers come from
-- **Free & open-source**: Uses free embedding models and LLMs
-- **Simple terminal interface**: Easy to use chat interface
+## ✨ Features
+
+- 🎯 **Accurate Answers**: Responses grounded in NCERT textbooks
+- 📚 **Source Citations**: Every answer includes page references
+- 💬 **Session-Based Memory**: Each user gets isolated conversation history
+- 🔍 **Semantic Search**: ChromaDB vector database for intelligent retrieval
+- 🌐 **REST API**: Easy integration with any frontend
+- 🎨 **Modern UI**: Beautiful purple-themed chat interface
 
 ## 🏗️ Architecture
 
 ```
-Student Question → Embedding → ChromaDB Search → Context Retrieval
-                                                        ↓
-Student ← Response ← Gemini LLM ← Context + Prompt
+RAG Pipeline:
+User Question → Query Reformulation → Vector Search → Context Retrieval
+              → LLM Generation → Answer + Sources
 ```
 
-### Components
+**Tech Stack:**
+- **Backend**: FastAPI, Python 3.9+
+- **LLM**: Ollama (local) / Google Gemini (cloud)
+- **Vector DB**: ChromaDB with sentence-transformers
+- **Embeddings**: all-MiniLM-L6-v2
+- **Frontend**: Vanilla HTML/CSS/JavaScript
 
-1. **PDF Ingestion**: Loads textbooks and splits into chunks
-2. **Embeddings**: `sentence-transformers/all-MiniLM-L6-v2` model
-3. **Vector Store**: ChromaDB for semantic search
-4. **Retrieval**: Finds relevant textbook sections
-5. **LLM**: Google Gemini API for generating responses
-6. **Chat Interface**: Terminal-based conversation UI
+## 📊 Data
 
-## 📋 Prerequisites
-
-- Python 3.8 or higher
-- Google Gemini API key (free tier available)
-- CBSE Class 10 textbooks in PDF format
+- **1,434 document chunks** from NCERT Class 10 Social Science
+- Subjects: Political Science, History, Geography, Economics
+- Metadata: subject, source file, page numbers
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Prerequisites
 
+- Python 3.9+
+- Ollama (for local development)
+- 4GB+ RAM
+
+### Local Setup
+
+1. **Clone the repository**
 ```bash
+git clone https://github.com/yourusername/rag-tutor.git
+cd rag-tutor
+```
+
+2. **Install dependencies**
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Setup Environment
-
-Create a `.env` file in the project root:
-
+3. **Set up Ollama** (local development)
 ```bash
-cp .env.example .env
+# Install from https://ollama.ai
+ollama pull llama3.2
+ollama serve  # Keep running in separate terminal
 ```
 
-Edit `.env` and add your Gemini API key:
-```
-GEMINI_API_KEY=your_actual_api_key_here
-```
-
-Get your API key from: https://makersuite.google.com/app/apikey
-
-### 3. Add Textbooks
-
-Place your CBSE Class 10 PDF textbooks in the `data/raw/` directory:
-
-```
-data/raw/
-├── english.pdf
-└── social_science.pdf
-```
-
-### 4. Run Setup
-
-Process the PDFs and create the vector database:
-
+4. **Initialize the database**
 ```bash
 python setup.py
 ```
 
-This will:
-- Load all PDFs from `data/raw/`
-- Split them into chunks
-- Generate embeddings
-- Create ChromaDB vector database
+5. **Start the API server**
+```bash
+uvicorn api:app --reload --port 8000
+```
 
-**Note**: First run will download the embedding model (~80MB).
+6. **Access the app**
+- Frontend: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-### 5. Start Chatting!
+## 🌐 Production Deployment
+
+### Railway (Recommended)
+
+1. **Get Gemini API Key** (free): https://aistudio.google.com/app/apikey
+
+2. **Deploy to Railway**:
+   - Fork this repo
+   - Connect to Railway: https://railway.app
+   - Add environment variable: `GEMINI_API_KEY=your_key`
+   - Deploy with `config.prod.yaml` (uses Gemini)
+
+3. **Your live URL**: `https://your-app.railway.app`
+
+See [deployment details](#deployment-options) below for other platforms.
+
+## 📖 Usage
+
+### Web Interface
+
+1. Open http://localhost:8000
+2. Ask questions like:
+   - "What is democracy?"
+   - "Explain nationalism"
+   - "What are the features of federalism?"
+3. Get answers with source citations
+
+### API
+
+**Chat Endpoint:**
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is democracy?"}'
+```
+
+**Response:**
+```json
+{
+  "answer": "Democracy is a form of government...",
+  "sources": [
+    {"subject": "Polity", "filename": "Polity", "page": 7}
+  ],
+  "session_id": "abc-123",
+  "success": true
+}
+```
+
+**Other Endpoints:**
+- `GET /api/health` - Health check
+- `GET /api/stats` - Database statistics
+- `POST /api/clear?session_id=xyz` - Clear session history
+
+## ⚙️ Configuration
+
+### Local Development (Ollama)
+Uses `config/config.local.yaml`:
+```yaml
+llm:
+  provider: "ollama"
+  model: "llama3.2"
+  temperature: 0.5
+```
+
+### Production (Gemini)
+Uses `config/config.prod.yaml`:
+```yaml
+llm:
+  provider: "gemini"
+  model: "models/gemini-1.5-flash"
+  temperature: 0.7
+```
+
+### Environment Variables
+Create `.env` file:
+```bash
+GEMINI_API_KEY=your_api_key_here  # For production only
+```
+
+## 🧪 Testing
 
 ```bash
-python main.py
-```
+# Test retrieval
+python -m pytest tests/
 
-## 💬 Usage
-
-### Commands
-
-- `/help` - Show help message
-- `/clear` - Clear chat history and start new topic
-- `/exit` - Quit the tutor
-
-### Example Questions
-
-```
-📝 You: What is democracy?
-
-🎓 Tutor: Democracy is a form of government in which the people have 
-the power to choose their representatives...
-
-📚 Sources:
-  [1] Social Science - Democratic Politics (Page 5)
+# Test API manually
+python test_api.py
 ```
 
 ## 📁 Project Structure
 
 ```
-RAG_Project/
-├── data/
-│   ├── raw/                    # Place PDF textbooks here
-│   └── processed/              # Processed data (auto-generated)
-├── src/
-│   ├── ingestion/              # PDF loading and chunking
-│   ├── vectorstore/            # Embeddings and ChromaDB
-│   ├── retrieval/              # Context retrieval
-│   ├── llm/                    # Gemini API integration
-│   └── chat/                   # Chat interface and memory
+rag-tutor/
+├── api.py                 # FastAPI application
+├── main.py                # CLI interface & CBSETutor class
+├── setup.py               # Database initialization
 ├── config/
-│   └── config.yaml             # Configuration settings
-├── vectorstore/                # ChromaDB storage (auto-generated)
-├── setup.py                    # One-time setup script
-└── main.py                     # Main application
+│   ├── config.yaml        # Active config (copied from local/prod)
+│   ├── config.local.yaml  # Ollama config
+│   └── config.prod.yaml   # Gemini config
+├── src/
+│   ├── chat/              # Memory & session management
+│   ├── ingestion/         # PDF processing & chunking
+│   ├── llm/               # LLM clients (Ollama/Gemini)
+│   ├── retrieval/         # Vector search & retrieval
+│   └── vectorstore/       # ChromaDB interface
+├── static/                # Frontend files
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+├── data/                  # NCERT PDF textbooks
+└── vectorstore/           # ChromaDB database
 ```
 
-## ⚙️ Configuration
+## 🔧 Advanced Configuration
 
-Edit `config/config.yaml` to customize:
+### Retrieval Settings
+```yaml
+retrieval:
+  top_k: 7                 # Number of chunks to retrieve
+  score_threshold: 0.5     # Minimum similarity score
+```
 
-- **Chunk size**: Text chunk size for embeddings
-- **Top-k retrieval**: Number of context chunks to retrieve
-- **LLM temperature**: Response randomness (0-1)
-- **Memory size**: Number of messages to remember
+### LLM Settings
+```yaml
+llm:
+  temperature: 0.7         # Creativity (0-1)
+  max_tokens: 500          # Response length
+```
 
-## 🔧 Troubleshooting
+### Chunking Settings
+```yaml
+chunking:
+  chunk_size: 1200         # Characters per chunk
+  chunk_overlap: 350       # Overlap between chunks
+```
 
-### "Vector database is empty"
-Run `python setup.py` first to process your PDFs.
+## 🐳 Docker Deployment
 
-### "API key not found"
-Make sure your `.env` file exists and contains a valid `GEMINI_API_KEY`.
+```bash
+# Build
+docker build -t rag-tutor .
 
-### "No PDF files found"
-Place your textbook PDFs in `data/raw/` directory.
+# Run
+docker run -p 8000:8000 \
+  -e GEMINI_API_KEY=your_key \
+  rag-tutor
+```
 
-### API quota exceeded
-Gemini free tier has limits. Wait a bit or upgrade to paid tier.
+## 📊 Performance
 
-## 🛣️ Roadmap
+- **Response Time**: ~2-3s (includes retrieval + generation)
+- **Database Size**: 1,434 chunks (~2.5MB embeddings)
+- **Memory Usage**: ~500MB (with model loaded)
+- **Concurrent Users**: Supports multiple sessions
 
-- [ ] Web UI with Streamlit
-- [ ] Quiz generation feature
-- [ ] Progress tracking
-- [ ] Support for more subjects
-- [ ] Mobile app
+## 🛠️ Development
 
-## 📝 License
+### Adding New Textbooks
 
-This project is open-source and available under the MIT License.
+1. Place PDFs in `data/`
+2. Run `python setup.py` to re-index
+3. Restart the API
 
-## 🤝 Contributing
+### Modifying Prompts
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+Edit `src/llm/prompts.py`:
+```python
+class TutorPrompts:
+    @staticmethod
+    def get_query_prompt(context, question, history):
+        # Customize prompt here
+```
 
-## 📧 Support
+## 🐛 Troubleshooting
 
-For questions or issues, please open a GitHub issue.
+**Ollama not connecting?**
+```bash
+# Check if running
+curl http://localhost:11434/api/tags
+
+# Restart Ollama
+killall ollama
+ollama serve
+```
+
+**ChromaDB issues?**
+```bash
+# Rebuild database
+rm -rf vectorstore/
+python setup.py
+```
+
+**Port 8000 in use?**
+```bash
+# Free the port
+lsof -ti:8000 | xargs kill -9
+```
+
+## 🎯 Deployment Options
+
+### 1. Railway.app (Easiest)
+- Free $5 credit
+- Auto-deploys from GitHub
+- Built-in SSL
+- Cost: ~$5-10/month
+
+### 2. Render.com
+- Free tier available
+- Docker support
+- Auto SSL
+- Cost: Free or $7/month
+
+### 3. DigitalOcean/AWS/GCP
+- Full control
+- Requires manual setup
+- Cost: $12-50/month
 
 ---
 
-**Happy Learning! 📚**
+**Built with ❤️ using RAG + Vector Search + LLMs**
+
+⭐ Star this repo if you find it helpful!
