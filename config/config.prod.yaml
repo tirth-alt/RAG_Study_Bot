@@ -1,4 +1,4 @@
-# Local Development Configuration (Ollama)
+# Production Configuration (Gemini-based)
 
 # Embedding Configuration
 embedding:
@@ -20,15 +20,15 @@ retrieval:
   top_k: 7
   score_threshold: 0.5
 
-# LLM Configuration - OLLAMA FOR LOCAL
+# LLM Configuration - GEMINI FOR CLOUD
 llm:
-  provider: "ollama"
-  model: "llama3.2"
-  temperature: 0.5
+  provider: "gemini"  # Using Google Gemini (cloud API)
+  model: "models/gemini-1.5-flash"  # Free tier model
+  temperature: 0.7
   max_tokens: 500
 
 # Chat Configuration
 chat:
   max_history: 3
-  memory_size: 3
+  memory_size: 3  # Added missing field
   show_sources: true

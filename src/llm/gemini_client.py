@@ -72,15 +72,25 @@ class GeminiClient:
                 return "I'm having trouble generating a response. Please try rephrasing your question."
             
         except Exception as e:
-            error_msg = str(e)
-            
-            # Handle common errors
-            if "quota" in error_msg.lower() or "limit" in error_msg.lower():
-                return "⚠️  API quota exceeded. Please try again later or check your API limits."
-            elif "api key" in error_msg.lower() or "401" in error_msg:
-                return "❌ API key error. Please check your GEMINI_API_KEY in .env file."
-            else:
-                return f"❌ Error: {error_msg}"
+            # Return full error to debug
+            return f"❌ Gemini Error: {str(e)}"
+    
+    def test_connection(self) -> bool:
+        """
+        Test if Gemini API is accessible.
+        
+        Returns:
+            True if connected, False otherwise
+        """
+        try:
+            # Try a simple generation to test connection
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents="Test"
+            )
+            return True
+        except:
+            return False
 
 
 if __name__ == "__main__":
