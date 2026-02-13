@@ -4,7 +4,6 @@ An intelligent tutoring system for CBSE Class 10 Social Science using Retrieval-
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## ✨ Features
 
