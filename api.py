@@ -79,14 +79,16 @@ async def health_check():
         raise HTTPException(status_code=503, detail="Tutor not initialized")
     
     try:
-        # Test Ollama connection
-        ollama_status = tutor.llm.test_connection()
-        db_size = tutor.retriever.chroma_db.collection.count()
+        # Test Ollama/Gemini connection using LangChain
+        ollama_connected = tutor.rag_tutor.llm.test_connection()
+        
+        # Get database stats
+        stats = tutor.rag_tutor.rag.vectorstore.get_stats()
         
         return HealthResponse(
             status="healthy",
-            ollama_connected=ollama_status,
-            database_size=db_size
+            ollama_connected=ollama_connected,
+            database_size=stats["document_count"]
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Health check failed: {str(e)}")
@@ -96,13 +98,13 @@ async def health_check():
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Process a student's question and return an answer.
+    Chat endpoint - answer questions using RAG.
     
     Args:
         request: ChatRequest with question and optional clear_history flag
         
     Returns:
-        ChatResponse with answer and sources
+        ChatResponse with answer, sources, and session ID.
     """
     if tutor is None or session_manager is None:
         raise HTTPException(status_code=503, detail="Tutor not initialized")
@@ -115,41 +117,32 @@ async def chat(request: ChatRequest):
         if request.clear_history:
             memory.clear()
         
-        # Get chat history for query reformulation
-        history_exchanges = memory.get_history()
+        # Get chat history for context
+        history = memory.get_history()
         
-        # Get relevant context with reformulation
-        context, sources = tutor.retriever.get_context_string(
-            request.question,
-            chat_history=history_exchanges
+        # Use LangChain RAG to get answer
+        result = tutor.rag_tutor.ask(
+            question=request.question,
+            chat_history=history
         )
         
-        # Get conversation history for prompt
-        history = memory.get_history_string(num_exchanges=2)
-        
-        # Build prompt
-        from src.llm.prompts import TutorPrompts
-        prompt = TutorPrompts.get_query_prompt(context, request.question, history)
-        
-        # Generate response
-        response = tutor.llm.generate_response(prompt)
-        
         # Save to session memory
-        memory.add_exchange(request.question, response)
+        memory.add_exchange(request.question, result['answer'])
         
-        # Format sources
-        formatted_sources = []
-        for source in sources:
-            formatted_sources.append({
-                "subject": source.get("subject", "Unknown"),
-                "filename": source.get("source", "Unknown"),
-                "page": source.get("page", 0)
-            })
+        # Format sources for API response
+        formatted_sources = [
+            {
+                "subject": s.get("subject", "Unknown"),
+                "filename": s.get("filename", "Unknown"),
+                "page": s.get("page", 0)
+            }
+            for s in result['sources']
+        ]
         
         return ChatResponse(
-            answer=response,
+            answer=result['answer'],
             sources=formatted_sources,
-            session_id=session_id,  # Return session ID
+            session_id=session_id,
             success=True
         )
     

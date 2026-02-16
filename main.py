@@ -1,6 +1,6 @@
 """
 Main Application
-CBSE Class 10 AI Tutor - RAG-based chatbot.
+CBSE Class 10 AI Tutor - RAG-based chatbot using LangChain.
 """
 
 import os
@@ -11,18 +11,15 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.vectorstore.embeddings import EmbeddingGenerator
-from src.vectorstore.chroma_db import ChromaDBManager
-from src.retrieval.retriever import Retriever
-from src.llm.gemini_client import GeminiClient
-from src.llm.ollama_client import OllamaClient
+# LangChain imports
+from src.chain.rag_chain import CBSETutorRAG
 from src.llm.prompts import TutorPrompts
 from src.chat.memory import ConversationMemory
 from src.chat.interface import ChatInterface
 
 
 class CBSETutor:
-    """Main CBSE Tutor application."""
+    """Main CBSE Tutor application using LangChain."""
     
     def __init__(self, config_path: str = "config/config.yaml"):
         """
@@ -34,55 +31,20 @@ class CBSETutor:
         # Load configuration
         self.config = self._load_config(config_path)
         
-        # Initialize components
+        # Initialize LangChain RAG system
         print("🔄 Initializing CBSE Class 10 AI Tutor...")
         
-        # 1. Embedding generator
-        self.embedder = EmbeddingGenerator(
-            model_name=self.config['embedding']['model_name'],
-            device=self.config['embedding']['device']
-        )
-        
-        # 2. Vector database
-        self.db = ChromaDBManager(
-            persist_directory=self.config['vectorstore']['persist_directory'],
-            collection_name=self.config['vectorstore']['collection_name']
-        )
-        
-        # Check if database is populated
-        if self.db.get_stats()["document_count"] == 0:
-            print("\n❌ Vector database is empty!")
-            print("Please run setup first: python setup.py")
-            sys.exit(1)
-        
-        # 3. Retriever
-        self.retriever = Retriever(
-            embedding_generator=self.embedder,
-            chroma_db=self.db,
-            top_k=self.config['retrieval']['top_k']
-        )
-        
-        # 4. LLM client (Ollama or Gemini)
         try:
-            provider = self.config['llm']['provider'].lower()
-            
-            if provider == "ollama":
-                self.llm = OllamaClient(
-                    model_name=self.config['llm']['model'],
-                    temperature=self.config['llm']['temperature'],
-                    max_tokens=self.config['llm']['max_tokens']
-                )
-            else:  # gemini
-                self.llm = GeminiClient(
-                    model_name=self.config['llm']['model'],
-                    temperature=self.config['llm']['temperature'],
-                    max_tokens=self.config['llm']['max_tokens']
-                )
-        except ValueError as e:
-            print(f"\n{str(e)}")
+            self.rag_tutor = CBSETutorRAG(config=self.config)
+        except Exception as e:
+            print(f"\n❌ Failed to initialize RAG system: {str(e)}")
             sys.exit(1)
         
-        # 5. Chat components
+        # Backward compatibility - expose components
+        self.llm = self.rag_tutor.llm
+        self.retriever = self.rag_tutor.retriever
+        
+        # Chat components
         self.memory = ConversationMemory(
             max_messages=self.config['chat']['memory_size']
         )
@@ -106,33 +68,24 @@ class CBSETutor:
     
     def process_query(self, question: str) -> tuple:
         """
-        Process a user query.
+        Process a user question using LangChain RAG.
         
         Args:
-            question: User's question
+            question: User question
             
         Returns:
-            Tuple of (response, sources)
+            Tuple of (answer, sources)
         """
-        # Get chat history for query reformulation
-        history_exchanges = self.memory.get_history()
+        # Get chat history for context
+        history = self.memory.get_history()
         
-        # Get relevant context with reformulation
-        context, sources = self.retriever.get_context_string(
-            question,
-            chat_history=history_exchanges
+        # Use LangChain RAG to get answer
+        result = self.rag_tutor.ask(
+            question=question,
+            chat_history=history
         )
         
-        # Get conversation history
-        history = self.memory.get_history_string(num_exchanges=2)
-        
-        # Build prompt
-        prompt = TutorPrompts.get_query_prompt(context, question, history)
-        
-        # Generate response
-        response = self.llm.generate_response(prompt)
-        
-        return response, sources
+        return result['answer'], result['sources']
     
     def run(self):
         """Run the chat interface."""
