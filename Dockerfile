@@ -1,28 +1,30 @@
-# Cloud Deployment - Dockerfile (Gemini-based)
-# Optimized for Railway/Render deployment
-
+# Cloud Deployment - Optimized Dockerfile
 FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (minimal)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for caching)
+# Install CPU-only torch and sentence-transformers first to control size
+# This avoids downloading the 5GB+ CUDA version
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Copy requirements and install remaining dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (uses .dockerignore to skip .venv, .git, etc.)
 COPY . .
 
-# Expose port (Railway auto-detects)
+# Expose port
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
 # Run the application

@@ -2,7 +2,10 @@
 # This tells Railway how to build and run your app
 
 [build]
-builder = "NIXPACKS"
+# Switch to Dockerfile builder to use our size-optimized image
+# builder = "NIXPACKS"
+context = "."
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "uvicorn api:app --host 0.0.0.0 --port $PORT"
