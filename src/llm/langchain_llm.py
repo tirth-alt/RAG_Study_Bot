@@ -1,11 +1,12 @@
 """
 LangChain LLM Integration.
-Wraps Ollama and Gemini with LangChain's chat models.
+Wraps Ollama, Gemini, and Groq with LangChain's chat models.
 """
 
 from typing import Optional
 from langchain_community.chat_models import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 import os
@@ -28,7 +29,7 @@ class LangChainLLM:
         Initialize LangChain LLM.
         
         Args:
-            provider: 'ollama' or 'gemini'
+            provider: 'ollama', 'gemini', or 'groq'
             model: Model name
             temperature: Temperature for generation
             max_tokens: Maximum tokens to generate
@@ -43,8 +44,10 @@ class LangChainLLM:
             self._init_ollama()
         elif provider == "gemini":
             self._init_gemini()
+        elif provider == "groq":
+            self._init_groq()
         else:
-            raise ValueError(f"Unsupported provider: {provider}")
+            raise ValueError(f"Unsupported provider: {provider}. Use 'ollama', 'gemini', or 'groq'.")
     
     def _init_ollama(self):
         """Initialize Ollama chat model."""
@@ -79,6 +82,29 @@ class LangChainLLM:
         )
         
         print(f"✅ Gemini API initialized with model: {self.model_name}")
+    
+    def _init_groq(self):
+        """Initialize Groq chat model."""
+        print(f"🔄 Initializing Groq with model: {self.model_name}...")
+        
+        # Get API key
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "❌ GROQ_API_KEY not found!\n"
+                "Please set it in your .env file:\n"
+                "GROQ_API_KEY=your_groq_api_key_here\n"
+                "Get a free key at: https://console.groq.com"
+            )
+        
+        self.llm = ChatGroq(
+            model=self.model_name,
+            api_key=api_key,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
+        )
+        
+        print(f"✅ Groq API initialized with model: {self.model_name}")
     
     def test_connection(self) -> bool:
         """Test if LLM is accessible."""
@@ -138,12 +164,12 @@ ANSWER (using ONLY the context above):"""
             error_msg = str(e)
             
             # Handle common errors
-            if "quota" in error_msg.lower() or "resource" in error_msg.lower():
-                return f"⚠️ API quota/resource error: {error_msg[:150]}"
+            if "quota" in error_msg.lower() or "resource" in error_msg.lower() or "rate" in error_msg.lower():
+                return f"⚠️ API quota/rate limit error: {error_msg[:150]}"
             elif "api key" in error_msg.lower() or "401" in error_msg or "403" in error_msg:
-                return "❌ API key error. Please check your GEMINI_API_KEY in .env file."
+                return f"❌ API key error. Please check your {self.provider.upper()} API key."
             else:
-                return f"❌ Gemini Error: {error_msg[:200]}"
+                return f"❌ LLM Error ({self.provider}): {error_msg[:200]}"
     
     def create_prompt_template(self) -> ChatPromptTemplate:
         """

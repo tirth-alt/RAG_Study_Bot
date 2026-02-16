@@ -20,10 +20,10 @@ retrieval:
   top_k: 7
   score_threshold: 0.5
 
-# LLM Configuration - GEMINI FOR CLOUD
+# LLM Configuration - GROQ FOR CLOUD (Free Tier)
 llm:
-  provider: "gemini"  # Using Google Gemini (cloud API)
-  model: "models/gemini-1.5-flash"  # Free tier model
+  provider: "groq"
+  model: "llama-3.3-70b-versatile"  # Free, fast, high quality
   temperature: 0.7
   max_tokens: 500
 

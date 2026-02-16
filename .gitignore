@@ -13,7 +13,8 @@ env/
 ENV/
 
 # Vector database
-vectorstore/
+# UNCOMMENTED for Railway deployment:
+# vectorstore/
 
 # PDFs (optional - uncomment if PDFs are large)
 # data/raw/*.pdf

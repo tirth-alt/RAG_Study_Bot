@@ -65,8 +65,11 @@ class StatsResponse(BaseModel):
 async def startup_event():
     """Initialize the tutor on startup."""
     global tutor, session_manager
-    print("🔄 Initializing CBSE Class 10 AI Tutor API...")
-    tutor = CBSETutor()
+    import os
+    config_path = os.getenv("CONFIG_PATH", "config/config.yaml")
+    
+    print(f"🔄 Initializing CBSE Class 10 AI Tutor API with {config_path}...")
+    tutor = CBSETutor(config_path=config_path)
     session_manager = SessionManager(session_timeout_minutes=60)
     print("✅ API ready!")
 
