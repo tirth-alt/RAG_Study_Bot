@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+const API_URL = window.location.origin;
 
 let isLoading = false;
 let sessionId = null;  // Track session ID
