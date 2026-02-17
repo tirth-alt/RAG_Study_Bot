@@ -148,8 +148,15 @@ async def chat(request: ChatRequest):
             session_id=session_id,
             success=True
         )
-    
+        
+    except ValueError as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        import traceback
+        print(f"❌ Error in /api/chat: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 
