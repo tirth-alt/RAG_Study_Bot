@@ -5,8 +5,8 @@ Wraps existing ChromaDB with LangChain's Chroma class for unified interface.
 
 from typing import List, Dict, Optional, Any
 from langchain_chroma import Chroma
-from langchain.embeddings.base import Embeddings
-from langchain.schema import Document
+from langchain_core.embeddings import Embeddings
+from langchain_core.documents import Document
 import numpy as np
 
 

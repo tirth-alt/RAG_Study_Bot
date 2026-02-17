@@ -4,9 +4,9 @@ Complete RAG pipeline using LangChain's ConversationalRetrievalChain.
 """
 
 from typing import List, Dict, Tuple, Optional, Any
-from langchain.memory import ConversationBufferMemory
-from langchain.schema import Document, BaseRetriever
-from langchain.prompts import PromptTemplate, ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 from src.vectorstore.lc_chroma_store import LangChainChromaStore
 from src.llm.langchain_llm import LangChainLLM
