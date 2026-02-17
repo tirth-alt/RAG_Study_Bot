@@ -68,10 +68,28 @@ async def startup_event():
     import os
     config_path = os.getenv("CONFIG_PATH", "config/config.yaml")
     
-    print(f"🔄 Initializing CBSE Class 10 AI Tutor API with {config_path}...")
+    print("\n" + "="*50)
+    print(f"🚀 STARTING CBSE CLASS 10 AI TUTOR API")
+    print(f"📂 CONFIG_PATH: {config_path}")
+    
     tutor = CBSETutor(config_path=config_path)
+    
+    # Diagnostic: Print the provider being used
+    provider = tutor.config.get("llm", {}).get("provider", "unknown")
+    model = tutor.config.get("llm", {}).get("model", "unknown")
+    print(f"🤖 LLM PROVIDER: {provider}")
+    print(f"🧠 MODEL: {model}")
+    
+    if provider == "groq" and not os.getenv("GROQ_API_KEY"):
+        print("⚠️  WARNING: GROQ_API_KEY is not set!")
+    elif provider == "gemini" and not os.getenv("GEMINI_API_KEY"):
+        print("⚠️  WARNING: GEMINI_API_KEY is not set!")
+    elif provider == "ollama":
+        print("ℹ️  INFO: Running in local Ollama mode. This will likely fail in the cloud.")
+        
     session_manager = SessionManager(session_timeout_minutes=60)
     print("✅ API ready!")
+    print("="*50 + "\n")
 
 
 # Health check endpoint
