@@ -104,7 +104,7 @@ CONTEXT:
             Dictionary with answer, sources, and metadata
         """
         # Retrieve documents
-        docs = self.retriever.get_relevant_documents(question)
+        docs = self.retriever.invoke(question)
         
         # Extract context and sources
         context = "\n\n".join([doc.page_content for doc in docs])
