@@ -11,10 +11,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.ingestion.pdf_loader import PDFLoader
-from src.ingestion.text_chunker import TextChunker
-from src.vectorstore.embeddings import EmbeddingGenerator
-from src.vectorstore.chroma_db import ChromaDBManager
+from src.ingestion.langchain_loader import LangChainDocumentProcessor
+from src.vectorstore.lc_chroma_store import LangChainChromaStore
 
 
 def load_config():
@@ -59,7 +57,7 @@ def check_pdfs():
 def main():
     """Run setup process."""
     print("="*60)
-    print("  CBSE Class 10 AI Tutor - Setup")
+    print("  CBSE Class 10 AI Tutor - Setup (LangChain)")
     print("="*60)
     
     # Load configuration
@@ -75,10 +73,9 @@ def main():
     # Ask for confirmation
     print("\n" + "="*60)
     print("This setup will:")
-    print("  1. Load and process all PDFs from data/raw/")
+    print("  1. Load and process all PDFs from data/raw/ (using LangChain)")
     print("  2. Generate embeddings using sentence-transformers")
     print("  3. Create ChromaDB vector database")
-    print("  4. This may take a few minutes depending on PDF size")
     print("="*60)
     
     response = input("\nProceed with setup? (yes/no): ").strip().lower()
@@ -90,72 +87,54 @@ def main():
     print("Starting setup process...")
     print("="*60)
     
-    # Step 1: Load PDFs
-    print("\n[1/4] Loading PDFs...")
-    loader = PDFLoader(pdf_directory="data/raw")
-    documents = loader.load_all_pdfs()
-    
-    if not documents:
-        print("❌ No documents loaded. Please check your PDFs.")
-        sys.exit(1)
-    
-    # Step 2: Chunk documents
-    print("\n[2/4] Chunking documents...")
-    chunker = TextChunker(
+    # Initialize LangChain components
+    print("\n[1/3] Initializing components...")
+    processor = LangChainDocumentProcessor(
         chunk_size=config['chunking']['chunk_size'],
         chunk_overlap=config['chunking']['chunk_overlap']
     )
-    chunks = chunker.chunk_documents(documents)
     
-    # Step 3: Generate embeddings
-    print("\n[3/4] Generating embeddings...")
-    print("⏳ This may take a few minutes (first-time model download)...")
-    
-    embedder = EmbeddingGenerator(
-        model_name=config['embedding']['model_name'],
+    db = LangChainChromaStore(
+        persist_directory=config['vectorstore']['persist_directory'],
+        collection_name=config['vectorstore']['collection_name'],
+        embedding_model=config['embedding']['model_name'],
         device=config['embedding']['device']
     )
     
-    # Extract text from chunks
-    chunk_texts = [chunk["text"] for chunk in chunks]
-    embeddings = embedder.generate_embeddings(chunk_texts)
-    
-    # Step 4: Create vector database
-    print("\n[4/4] Creating vector database...")
-    
-    # Initialize ChromaDB (clear if exists)
-    db = ChromaDBManager(
-        persist_directory=config['vectorstore']['persist_directory'],
-        collection_name=config['vectorstore']['collection_name']
-    )
-    
     # Clear existing data
-    if db.get_stats()["document_count"] > 0:
+    if len(db.vectorstore.get()['ids']) > 0:
         print("⚠️  Existing database found. Clearing...")
-        db.clear_collection()
+        db.vectorstore.delete_collection()
+        # Re-initialize to create fresh collection
+        db = LangChainChromaStore(
+            persist_directory=config['vectorstore']['persist_directory'],
+            collection_name=config['vectorstore']['collection_name'],
+            embedding_model=config['embedding']['model_name'],
+            device=config['embedding']['device']
+        )
     
-    # Add documents
-    db.add_documents(chunks, embeddings)
+    # Step 2: Load and Chunk PDFs
+    print("\n[2/3] Processing PDFs (this may take a few minutes)...")
+    chunks = processor.process_pdfs("data/raw")
+    
+    if not chunks:
+        print("❌ No documents loaded. Please check your PDFs.")
+        sys.exit(1)
+    
+    # Step 3: Add to Vector DB
+    print("\n[3/3] Generating embeddings and adding to database...")
+    db.vectorstore.add_documents(chunks)
     
     # Print final stats
     print("\n" + "="*60)
     print("✅ Setup Complete!")
     print("="*60)
     
-    stats = db.get_stats()
+    count = len(db.vectorstore.get()['ids'])
     print(f"\n📊 Database Statistics:")
-    print(f"  • Collection: {stats['collection_name']}")
-    print(f"  • Total chunks: {stats['document_count']}")
-    print(f"  • Storage location: {stats['persist_directory']}")
-    
-    print(f"\n📚 Documents processed:")
-    subjects = {}
-    for chunk in chunks:
-        subject = chunk['metadata']['subject']
-        subjects[subject] = subjects.get(subject, 0) + 1
-    
-    for subject, count in subjects.items():
-        print(f"  • {subject}: {count} chunks")
+    print(f"  • Collection: {db.collection_name}")
+    print(f"  • Total chunks: {count}")
+    print(f"  • Storage location: {db.persist_directory}")
     
     print("\n" + "="*60)
     print("🚀 You're ready to start learning!")
